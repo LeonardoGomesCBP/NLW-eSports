@@ -14,7 +14,7 @@ import logoImg from "../../assets/logo-nlw-esports.png";
 import React, { useEffect, useState } from "react";
 import { Heading } from "../../components/Heading";
 import { DuoCard, DuoCardProps } from "../../components/DuoCard";
-
+import { DuoMatch } from "../../components/DuoMatch";
 interface RouteParams {
   id: string;
   title: string;
@@ -23,12 +23,19 @@ interface RouteParams {
 
 export function Game() {
   const [duos, setDuos] = useState<DuoCardProps[]>([]);
+  const [discordDuoSelected, setDiscordDuoSelected] = useState("");
   const route = useRoute();
   const game = route.params as GameParams;
 
   const navigation = useNavigation();
   function handleGoBack() {
     navigation.goBack();
+  }
+
+  async function getDiscordUser(adsId: string) {
+    fetch(`http://192.168.3.32:3333/ads/${adsId}/discord`)
+      .then((response) => response.json())
+      .then((data) => setDiscordDuoSelected(data.discord));
   }
 
   useEffect(() => {
@@ -65,16 +72,27 @@ export function Game() {
         <FlatList
           data={duos}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <DuoCard data={item} onConnect={() => {}} />}
+          renderItem={({ item }) => (
+            <DuoCard data={item} onConnect={() => getDiscordUser(item.id)} />
+          )}
           horizontal
-          contentContainerStyle={[styles.contentList, duos.length === 0 && {flex: 1, alignItems: 'center'} ]}
+          contentContainerStyle={[
+            styles.contentList,
+            duos.length === 0 && { flex: 1, alignItems: "center" },
+          ]}
           showsHorizontalScrollIndicator={false}
           style={styles.containerList}
           ListEmptyComponent={() => (
-            <Text style={styles.emptyListText}> 
+            <Text style={styles.emptyListText}>
               Não há anúncios públicados para esse jogo ainda.
             </Text>
           )}
+        />
+
+        <DuoMatch
+          visible={discordDuoSelected.length > 0}
+          discord={discordDuoSelected}
+          onClose={() => setDiscordDuoSelected("")}
         />
       </SafeAreaView>
     </Background>
